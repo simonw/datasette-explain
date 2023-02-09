@@ -1,28 +1,20 @@
 from datasette import hookimpl, Response
 
+
 async def explain(request, datasette):
     sql = request.args.get("sql")
     if not sql:
-        return Response.json({
-            "ok": False,
-            "error": "No SQL query"
-        })
+        return Response.json({"ok": False, "error": "No SQL query"})
     database = request.url_vars["database"]
     try:
         db = datasette.get_database(database)
     except KeyError:
-        return Response.json({
-            "ok": False,
-            "error": "No such database"
-        })
+        return Response.json({"ok": False, "error": "No such database"})
     try:
-        explain_result = await db.execute('explain ' + sql)
-        explain_query_result = await db.execute('explain query plan ' + sql)
+        explain_result = await db.execute("explain " + sql)
+        explain_query_result = await db.execute("explain query plan " + sql)
     except Exception as e:
-        return Response.json({
-            "ok": False,
-            "error": str(e)
-        })
+        return Response.json({"ok": False, "error": str(e)})
 
     # Build the explain_tree
     explain_tree = []
@@ -46,19 +38,30 @@ async def explain(request, datasette):
         if row["opcode"] == "OpenRead":
             rootpages.add(row["p2"])
     # Look up the table names for those rootpages
-    table_names = [r["name"] for r in await db.execute(
-        "select name from sqlite_master where type = 'table' and rootpage in ({})".format(', '.join('?' * len(rootpages))), list(rootpages)
-    )]
-    tables = [{
-        "name": name,
-        "columns": await db.table_columns(name),
-    } for name in table_names]
-    return Response.json({
-        "ok": True,
-        "explain_tree": explain_tree,
-        "tables": tables,
-    }, default=repr)
-
+    table_names = [
+        r["name"]
+        for r in await db.execute(
+            "select name from sqlite_master where type = 'table' and rootpage in ({})".format(
+                ", ".join("?" * len(rootpages))
+            ),
+            list(rootpages),
+        )
+    ]
+    tables = [
+        {
+            "name": name,
+            "columns": await db.table_columns(name),
+        }
+        for name in table_names
+    ]
+    return Response.json(
+        {
+            "ok": True,
+            "explain_tree": explain_tree,
+            "tables": tables,
+        },
+        default=repr,
+    )
 
 
 @hookimpl
@@ -66,6 +69,7 @@ def register_routes():
     return [
         ("^/(?P<database>[^/]+)/-/explain$", explain),
     ]
+
 
 JS = """
 (() => {
