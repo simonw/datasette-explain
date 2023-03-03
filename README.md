@@ -9,7 +9,7 @@ Explain SQL queries executed using Datasette
 
 ## Installation
 
-Install this plugin in the same environment as Datasette.
+Install this plugin in the same environment as Datasette. Note that it only works with Datasette version 1.0 and above.
 
     datasette install datasette-explain
 
