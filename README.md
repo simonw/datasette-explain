@@ -13,6 +13,8 @@ Install this plugin in the same environment as Datasette.
 
     datasette install datasette-explain
 
+This plugin requires a Datasette 1.0 alpha or higher.
+
 ## Usage
 
 The plugin adds JavaScript to the query editor page which will constantly update the page with information gained from running EXPLAIN QUERY PLAN queries against the entered SQL.
