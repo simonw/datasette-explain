@@ -3,6 +3,7 @@ from datasette import hookimpl, Response
 
 async def explain(request, datasette):
     sql = request.args.get("sql")
+    params = dict([(k, request.args[k]) for k in request.args if k != "sql"])
     if not sql:
         return Response.json({"ok": False, "error": "No SQL query"})
     database = request.url_vars["database"]
@@ -11,8 +12,8 @@ async def explain(request, datasette):
     except KeyError:
         return Response.json({"ok": False, "error": "No such database"})
     try:
-        explain_result = await db.execute("explain " + sql)
-        explain_query_result = await db.execute("explain query plan " + sql)
+        explain_result = await db.execute("explain " + sql, params)
+        explain_query_result = await db.execute("explain query plan " + sql, params)
     except Exception as e:
         return Response.json({"ok": False, "error": str(e)})
 
@@ -95,10 +96,13 @@ JS = """
     div.style.marginBottom = '1em';
     sqlForm.appendChild(div);
     setInterval(() => {
+        const formData = Object.fromEntries(new FormData(sqlForm).entries());
         const sql = editor.state.doc.toString();
+        formData.sql = sql;
+        const params = new URLSearchParams(formData).toString();
         if (sql !== previousSql) {
             previousSql = sql;
-            fetch('/DBNAME/-/explain?sql=' + encodeURIComponent(sql)).then(response => response.json()).then(data => {
+            fetch('/DBNAME/-/explain?' + params).then(response => response.json()).then(data => {
                 if (data.ok) {
                     const explainTree = data.explain_tree;
                     const tables = data.tables;
