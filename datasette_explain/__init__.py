@@ -1,9 +1,9 @@
 from datasette import hookimpl, Response
+from datasette.utils import derive_named_parameters
 
 
 async def explain(request, datasette):
     sql = request.args.get("sql")
-    params = dict([(k, request.args[k]) for k in request.args if k != "sql"])
     if not sql:
         return Response.json({"ok": False, "error": "No SQL query"})
     database = request.url_vars["database"]
@@ -11,6 +11,7 @@ async def explain(request, datasette):
         db = datasette.get_database(database)
     except KeyError:
         return Response.json({"ok": False, "error": "No such database"})
+    params = {name: "" for name in await derive_named_parameters(db, sql)}
     try:
         explain_result = await db.execute("explain " + sql, params)
         explain_query_result = await db.execute("explain query plan " + sql, params)

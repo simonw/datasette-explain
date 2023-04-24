@@ -14,11 +14,10 @@ async def ds():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "sql,params,expected",
+    "sql,expected",
     (
         (
             "select 1",
-            {},
             {
                 "ok": True,
                 "explain_tree": [{"detail": "SCAN CONSTANT ROW", "children": []}],
@@ -27,7 +26,6 @@ async def ds():
         ),
         (
             "select * from t1",
-            {},
             {
                 "ok": True,
                 "explain_tree": [{"detail": "SCAN t1", "children": []}],
@@ -35,8 +33,20 @@ async def ds():
             },
         ),
         (
+            "select * from t1 where id > :id",
+            {
+                "ok": True,
+                "explain_tree": [
+                    {
+                        "detail": "SEARCH t1 USING INTEGER PRIMARY KEY (rowid>?)",
+                        "children": [],
+                    }
+                ],
+                "tables": [{"name": "t1", "columns": ["id"]}],
+            },
+        ),
+        (
             "select id, (select id from t2 where t2.id = t1.id) from t1",
-            {},
             {
                 "ok": True,
                 "explain_tree": [
@@ -59,7 +69,6 @@ async def ds():
         ),
         (
             "select count(*) from t1 where id > :id",
-            {"id": 1},
             {
                 "ok": True,
                 "explain_tree": [
@@ -73,8 +82,8 @@ async def ds():
         ),
     ),
 )
-async def test_explain(ds, sql, params, expected):
-    params["sql"] = sql
+async def test_explain(ds, sql, expected):
+    params = {"sql": sql}
     response = await ds.client.get("/test/-/explain", params=params)
     assert response.status_code == 200
     data = response.json()
