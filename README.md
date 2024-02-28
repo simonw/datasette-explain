@@ -19,6 +19,10 @@ The plugin adds JavaScript to the query editor page which will constantly update
 
 This may result in an error message, or it may show the query plan along with any tables used by the query.
 
+## Demo
+
+You can see this plugin in action on [datasette.simonwillison.net](https://datasette.simonwillison.net/simonwillisonblog?sql=select%0D%0A++blog_tag.tag%2C%0D%0A++blog_blogmark.link_title%2C%0D%0A++blog_blogmark.link_url%0D%0Afrom%0D%0A++blog_blogmark_tags%0D%0A++join+blog_tag+on+tag_id+%3D+blog_tag.id%0D%0A++join+blog_blogmark+on+blog_blogmark_tags.blogmark_id+%3D+blog_blogmark.id%0D%0Aorder+by+blog_blogmark.id+desc).
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
