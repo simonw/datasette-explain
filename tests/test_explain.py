@@ -80,6 +80,14 @@ async def ds():
                 "tables": [{"name": "t1", "columns": ["id"]}],
             },
         ),
+        (
+            "explain select count(*) from t1",
+            {
+                "ok": True,
+                "explain_tree": [],
+                "tables": [],
+            },
+        ),
     ),
 )
 async def test_explain(ds, sql, expected):

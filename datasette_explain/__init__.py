@@ -11,6 +11,16 @@ async def explain(request, datasette):
         db = datasette.get_database(database)
     except KeyError:
         return Response.json({"ok": False, "error": "No such database"})
+    # No errors for explain queries (which cannot be explained)
+    if sql.strip().lower().startswith("explain"):
+        return Response.json(
+            {
+                "ok": True,
+                "explain_tree": [],
+                "tables": [],
+            },
+        )
+
     params = {name: "" for name in await derive_named_parameters(db, sql)}
     try:
         explain_result = await db.execute("explain " + sql, params)
@@ -108,36 +118,40 @@ JS = """
                     const explainTree = data.explain_tree;
                     const tables = data.tables;
                     div.innerHTML = '';
-                    const listWrapper = document.createElement('div');
-                    let h3Explain = document.createElement('h3');
-                    h3Explain.innerText = 'Explain query plan';
-                    div.appendChild(h3Explain);
-                    listWrapper.style.fontFamily = 'courier';
-                    listWrapper.style.fontSize = '0.85em';
-                    const ul = document.createElement('ul');
-                    explainTree.forEach(root => {
-                        ul.appendChild(buildTree(root));
-                    });
-                    listWrapper.appendChild(ul);
-                    div.appendChild(listWrapper);
-                    let tablesDiv = document.createElement('div');
-                    tablesDiv.style.marginTop = '1em';
-                    let h3 = document.createElement('h3');
-                    h3.innerText = 'Tables used by this query';
-                    tablesDiv.appendChild(h3);
-                    tables.forEach(table => {
-                        let tableDiv = document.createElement('div');
-                        let h4 = document.createElement('h4');
-                        h4.innerText = table.name;
-                        tableDiv.appendChild(h4);
-                        let tableColumns = table.columns.join(', ');
-                        let p = document.createElement('p');
-                        p.style.fontSize = '0.85em';
-                        p.innerText = tableColumns;
-                        tableDiv.appendChild(p);
-                        tablesDiv.appendChild(tableDiv);
-                    });
-                    div.appendChild(tablesDiv);
+                    if (data.explain_tree.length) {
+                        const listWrapper = document.createElement('div');
+                        let h3Explain = document.createElement('h3');
+                        h3Explain.innerText = 'Explain query plan';
+                        div.appendChild(h3Explain);
+                        listWrapper.style.fontFamily = 'courier';
+                        listWrapper.style.fontSize = '0.85em';
+                        const ul = document.createElement('ul');
+                        explainTree.forEach(root => {
+                            ul.appendChild(buildTree(root));
+                        });
+                        listWrapper.appendChild(ul);
+                        div.appendChild(listWrapper);
+                    }
+                    if (data.tables.length) {
+                        let tablesDiv = document.createElement('div');
+                        tablesDiv.style.marginTop = '1em';
+                        let h3 = document.createElement('h3');
+                        h3.innerText = 'Tables used by this query';
+                        tablesDiv.appendChild(h3);
+                        tables.forEach(table => {
+                            let tableDiv = document.createElement('div');
+                            let h4 = document.createElement('h4');
+                            h4.innerText = table.name;
+                            tableDiv.appendChild(h4);
+                            let tableColumns = table.columns.join(', ');
+                            let p = document.createElement('p');
+                            p.style.fontSize = '0.85em';
+                            p.innerText = tableColumns;
+                            tableDiv.appendChild(p);
+                            tablesDiv.appendChild(tableDiv);
+                        });
+                        div.appendChild(tablesDiv);
+                    }
                 }
                 else {
                     let error = document.createElement('p');
