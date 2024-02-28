@@ -10,11 +10,9 @@ Explain SQL queries executed using Datasette
 ## Installation
 
 Install this plugin in the same environment as Datasette.
-
-    datasette install datasette-explain
-
-This plugin requires a Datasette 1.0 alpha or higher.
-
+```bash
+datasette install datasette-explain
+```
 ## Usage
 
 The plugin adds JavaScript to the query editor page which will constantly update the page with information gained from running EXPLAIN QUERY PLAN queries against the entered SQL.
@@ -24,15 +22,16 @@ This may result in an error message, or it may show the query plan along with an
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
-
-    cd datasette-explain
-    python3 -m venv venv
-    source venv/bin/activate
-
+```bash
+cd datasette-explain
+python3 -m venv venv
+source venv/bin/activate
+```
 Now install the dependencies and test dependencies:
-
-    pip install -e '.[test]'
-
+```bash
+pip install -e '.[test]'
+```
 To run the tests:
-
-    pytest
+```bash
+pytest
+```
