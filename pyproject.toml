@@ -1,0 +1,33 @@
+[project]
+name = "datasette-explain"
+version = "0.2.1"
+description = "Explain SQL queries executed using Datasette"
+readme = "README.md"
+authors = [{name = "Simon Willison"}]
+license = {text = "Apache-2.0"}
+classifiers=[
+    "Framework :: Datasette",
+    "License :: OSI Approved :: Apache Software License"
+]
+requires-python = ">=3.8"
+dependencies = [
+    "datasette",
+]
+
+[project.urls]
+Homepage = "https://datasette.io/plugins/datasette-explain"
+Changelog = "https://github.com/simonw/datasette-explain/releases"
+Issues = "https://github.com/simonw/datasette-explain/issues"
+CI = "https://github.com/simonw/datasette-explain/actions"
+
+[project.entry-points.datasette]
+explain = "datasette_explain"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-asyncio"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+
+[tool.setuptools]
+packages = ["datasette_explain"]
