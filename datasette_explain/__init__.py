@@ -102,13 +102,16 @@ JS = """
     }
     let previousSql = '';
     const sqlForm = document.querySelector('form.sql');
+    if (!sqlForm) return;
     const div = document.createElement('div');
     div.style.marginTop = '1em';
     div.style.marginBottom = '1em';
     sqlForm.appendChild(div);
     setInterval(() => {
         const formData = Object.fromEntries(new FormData(sqlForm).entries());
-        const sql = editor.state.doc.toString();
+        const sql = window.editor ? window.editor.state.doc.toString()
+            : (document.querySelector('pre#sql-query')?.textContent
+                || formData.sql || '');
         formData.sql = sql;
         const params = new URLSearchParams(formData).toString();
         if (sql !== previousSql) {
