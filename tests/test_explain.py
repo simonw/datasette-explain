@@ -96,3 +96,30 @@ async def test_explain(ds, sql, expected):
     assert response.status_code == 200
     data = response.json()
     assert data == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "params,expected_detail",
+    [
+        (
+            {"pattern": "hello%"},
+            "SEARCH items USING COVERING INDEX items_name (name>? AND name<?)",
+        ),
+        ({"pattern": "%hello"}, "SCAN items"),
+        ({"pattern": ""}, "SCAN items"),
+        ({}, "SCAN items"),
+    ],
+)
+async def test_explain_parameter_values(ds, params, expected_detail):
+    db = ds.get_database("test")
+    await db.execute_write("create table items (name text)")
+    await db.execute_write("create index items_name on items (name collate nocase)")
+    response = await ds.client.get(
+        "/test/-/explain",
+        params={"sql": "select * from items where name like :pattern", **params},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["explain_tree"] == [{"detail": expected_detail, "children": []}]

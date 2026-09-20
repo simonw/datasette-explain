@@ -21,7 +21,10 @@ async def explain(request, datasette):
             },
         )
 
-    params = {name: "" for name in await derive_named_parameters(db, sql)}
+    params = {
+        name: request.args.get(name, "")
+        for name in await derive_named_parameters(db, sql)
+    }
     try:
         explain_result = await db.execute("explain " + sql, params)
         explain_query_result = await db.execute("explain query plan " + sql, params)
@@ -100,7 +103,7 @@ JS = """
         }
         return li;
     }
-    let previousSql = '';
+    let previousParams = '';
     const sqlForm = document.querySelector('form.sql');
     if (!sqlForm) return;
     const div = document.createElement('div');
@@ -114,9 +117,10 @@ JS = """
                 || formData.sql || '');
         formData.sql = sql;
         const params = new URLSearchParams(formData).toString();
-        if (sql !== previousSql) {
-            previousSql = sql;
+        if (params !== previousParams) {
+            previousParams = params;
             fetch('/DBNAME/-/explain?' + params).then(response => response.json()).then(data => {
+                if (params !== previousParams) return;
                 if (data.ok) {
                     const explainTree = data.explain_tree;
                     const tables = data.tables;
