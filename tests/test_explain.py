@@ -113,8 +113,12 @@ async def test_explain(ds, sql, expected):
 )
 async def test_explain_parameter_values(ds, params, expected_detail):
     db = ds.get_database("test")
-    await db.execute_write("create table items (name text)")
-    await db.execute_write("create index items_name on items (name collate nocase)")
+    # "if not exists" because on Datasette < 1.0 the named in-memory database
+    # is shared by every Datasette instance created during the test run
+    await db.execute_write("create table if not exists items (name text)")
+    await db.execute_write(
+        "create index if not exists items_name on items (name collate nocase)"
+    )
     response = await ds.client.get(
         "/test/-/explain",
         params={"sql": "select * from items where name like :pattern", **params},
